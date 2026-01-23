@@ -128,9 +128,9 @@ const clear = () => {
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-800 bg-slate-950/70 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-2">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-sams-700 shadow-soft">
+            <div className="grid h-9 w-9 place-items-center rounded-2xl bg-sams-700 shadow-soft">
               <span className="text-lg font-extrabold text-white">CS</span>
             </div>
             <div>
@@ -145,9 +145,9 @@ const clear = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-5 py-8">
+<main className="mx-auto max-w-4xl px-4 py-4">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 shadow-soft">
-          <div className="p-5 pb-3">
+          <div className="p-4 pb-2">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-xl font-extrabold tracking-tight text-slate-100">Lookup</div>
@@ -209,7 +209,7 @@ const clear = () => {
             </div>
           </div>
 
-          <div className="p-5 pt-2">
+          <div className="p-4 pt-2">
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
   ref={inputRef}
@@ -251,7 +251,7 @@ UPC scans match the sheet using the <span className="text-slate-300">first 11 di
               )}
             </div>
 
-            <div className="my-5 h-px w-full bg-slate-800" />
+            <div className="my-3 h-px w-full bg-slate-800" />
 
             {error && (
               <div className="rounded-xl border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-200">
@@ -292,24 +292,24 @@ UPC scans match the sheet using the <span className="text-slate-300">first 11 di
                   </span>
                 </div>
 
-                <div className="my-5 h-px w-full bg-slate-800" />
+                <div className="my-3 h-px w-full bg-slate-800" />
 
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+<div className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
                     <div className="text-xs font-semibold text-slate-400">Retail</div>
-                    <div className="mt-1 text-2xl font-extrabold text-slate-100">{money(result.retail)}</div>
+                    <div className="mt-1 text-xl sm:text-2xl font-extrabold text-slate-100">{money(result.retail)}</div>
                     <div className="mt-1 text-xs text-slate-500">Retail per Unit</div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
                     <div className="text-xs font-semibold text-slate-400">Tier 1</div>
-<div className="mt-1 text-2xl font-extrabold text-green-300">{money(result.tier1)}</div>
+<div className="mt-1 text-xl sm:text-2xl font-extrabold text-green-300">{money(result.tier1)}</div>
                     <div className="mt-1 text-xs text-slate-500">30% off retail</div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
                     <div className="text-xs font-semibold text-slate-400">Tier 2</div>
-<div className="mt-1 text-2xl font-extrabold text-yellow-300">{money(result.tier2)}</div>
+<div className="mt-1 text-xl sm:text-2xl font-extrabold text-yellow-300">{money(result.tier2)}</div>
                     <div className="mt-1 text-xs text-slate-500">50% off retail</div>
                   </div>
                 </div>
