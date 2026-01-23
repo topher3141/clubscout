@@ -92,6 +92,11 @@ async function fetchRows(): Promise<Row[]> {
 
   const header = values[0].map((h) => (h || "").toString().trim());
   const idx = (name: string) => header.findIndex((h) => h.toLowerCase() === name.toLowerCase());
+  const idxAny = (names: string[]) =>
+  names
+    .map((n) => idx(n))
+    .find((i) => typeof i === "number" && i >= 0) ?? -1;
+
   const getAt = (row: any[], i: number) => (i >= 0 ? (row[i] ?? "").toString().trim() : "");
 
   const iImportDate = idx("Import Date");
@@ -99,7 +104,17 @@ async function fetchRows(): Promise<Row[]> {
   const iItemNumber = idx("ItemNumber");
   const iUpc = idx("UPC Number");
   const iCatDesc = idx("Category description");
-  const iRetailPerUnit = idx("Retail per Unit");
+let iRetailPerUnit = idxAny([
+  "Retail per Unit",
+  "Retail per unit",
+  "Retail per Unit (USD$)",
+  "Retail per unit (USD$)",
+  "Retail per Unit (USD)",
+  "Retail per unit (USD)"
+]);
+
+// Fallback to column K (A=0 ... K=10) if header matching fails
+if (iRetailPerUnit < 0) iRetailPerUnit = 10;
 
   const rows: Row[] = [];
   for (let r = 1; r < values.length; r++) {
