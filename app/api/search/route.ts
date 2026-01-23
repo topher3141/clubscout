@@ -113,7 +113,8 @@ async function fetchRows(): Promise<Row[]> {
       importDate: getAt(row, iImportDate),
       description: getAt(row, iDescription),
       itemNumber,
-      upcNumber: digitsOnly(upcNumber).replace(/^0+/, ""),      categoryDescription: getAt(row, iCatDesc),
+      upcNumber: digitsOnly(upcNumber).replace(/^0+/, ""),
+      categoryDescription: getAt(row, iCatDesc),
       retailPerUnit: getAt(row, iRetailPerUnit)
     });
   }
@@ -145,7 +146,8 @@ export async function GET(req: Request) {
     const rows = await getCachedRows();
 
     if (type === "item") {
-      const match = rows.find((r) => r.itemNumber === q);
+      const qItem = digitsOnly(q);
+      const match = rows.find((r) => digitsOnly(r.itemNumber) === qItem);
       if (!match) return NextResponse.json({ ok: true, found: false });
 
       const retail = parseMoney(match.retailPerUnit);
@@ -181,7 +183,7 @@ if (!match) return NextResponse.json({ ok: true, found: false, searched: core })
     return NextResponse.json({
       ok: true,
       found: true,
-      searched: alt,
+      searched: core,
       result: {
         description: match.description,
         itemNumber: match.itemNumber,
