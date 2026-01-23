@@ -52,6 +52,13 @@ function useScannerAutoSearch(opts: { value: string; mode: Mode; onSearch: () =>
 export default function Page() {
   const [mode, setMode] = React.useState<Mode>("upc");
   const [query, setQuery] = React.useState("");
+  const [scanMode, setScanMode] = React.useState(true);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const focusInput = React.useCallback(() => {
+  // Keep scanner-ready focus
+  window.setTimeout(() => inputRef.current?.focus(), 0);
+}, []);
+
   const [loading, setLoading] = React.useState(false);
   const [found, setFound] = React.useState<boolean | null>(null);
   const [searched, setSearched] = React.useState<string | null>(null);
@@ -90,10 +97,16 @@ export default function Page() {
       setFound(true);
       setResult(data.result);
       setLoading(false);
-    } catch (e: any) {
-      setError(e?.message || "Unexpected error");
-      setLoading(false);
-    }
+
+} catch (e: any) {
+  setError(e?.message || "Unexpected error");
+  setLoading(false);
+} finally {
+  // Clear and refocus for next scan/value
+  setQuery("");
+  focusInput();
+}
+
   }, [query, mode]);
 
   useScannerAutoSearch({ value: query, mode, onSearch: doSearch });
@@ -141,51 +154,73 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setMode("upc");
-                    clear();
-                  }}
-                  className={
-                    "rounded-xl px-3 py-2 text-sm font-semibold transition " +
-                    (mode === "upc"
-                      ? "bg-sams-700 text-white"
-                      : "bg-slate-950 text-slate-300 hover:bg-slate-800")
-                  }
-                >
-                  UPC
-                </button>
-                <button
-                  onClick={() => {
-                    setMode("item");
-                    clear();
-                  }}
-                  className={
-                    "rounded-xl px-3 py-2 text-sm font-semibold transition " +
-                    (mode === "item"
-                      ? "bg-sams-700 text-white"
-                      : "bg-slate-950 text-slate-300 hover:bg-slate-800")
-                  }
-                >
-                  ItemNumber
-                </button>
-              </div>
+<div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => {
+        setMode("upc");
+        clear();
+        focusInput();
+      }}
+      className={
+        "rounded-xl px-3 py-2 text-sm font-semibold transition " +
+        (mode === "upc"
+          ? "bg-sams-700 text-white"
+          : "bg-slate-950 text-slate-300 hover:bg-slate-800")
+      }
+    >
+      UPC
+    </button>
+    <button
+      onClick={() => {
+        setMode("item");
+        clear();
+        focusInput();
+      }}
+      className={
+        "rounded-xl px-3 py-2 text-sm font-semibold transition " +
+        (mode === "item"
+          ? "bg-sams-700 text-white"
+          : "bg-slate-950 text-slate-300 hover:bg-slate-800")
+      }
+    >
+      ItemNumber
+    </button>
+  </div>
+
+  {mode === "upc" && (
+    <label className="flex select-none items-center gap-2 text-xs text-slate-300">
+      <input
+        type="checkbox"
+        checked={scanMode}
+        onChange={(e) => {
+          setScanMode(e.target.checked);
+          focusInput();
+        }}
+        className="h-4 w-4 accent-[#1a89ff]"
+      />
+      Scan Mode (hide keyboard)
+    </label>
+  )}
+</div>
+
             </div>
           </div>
 
           <div className="p-5 pt-2">
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
+  ref={inputRef}
   autoFocus
   value={query}
   onChange={(e) => setQuery(e.target.value)}
   onKeyDown={onKeyDown}
   placeholder={mode === "upc" ? "Scan or enter UPC-A (12 digits)..." : "Enter ItemNumber..."}
-  inputMode="numeric"
+  inputMode={mode === "upc" && scanMode ? "none" : "numeric"}
   pattern="[0-9]*"
   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sams-400"
 />
+
 
               <div className="flex gap-2">
                 <button
