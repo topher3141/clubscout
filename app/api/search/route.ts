@@ -155,10 +155,13 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const type = (searchParams.get("type") || "upc").toLowerCase();
     const q = (searchParams.get("q") || "").trim();
+    const refresh = searchParams.get("refresh") === "1";
+    const debug = searchParams.get("debug") === "1";
+
 
     if (!q) return NextResponse.json({ ok: false, error: "Missing query" }, { status: 400 });
 
-    const rows = await getCachedRows();
+    const rows = refresh ? await fetchRows() : await getCachedRows();
 
     if (type === "item") {
       const qItem = digitsOnly(q);
@@ -190,7 +193,24 @@ if (!core) {
 }
 
 const match = rows.find((r) => r.upcNumber === core);
-if (!match) return NextResponse.json({ ok: true, found: false, searched: core });
+if (!match) {
+  return NextResponse.json({
+    ok: true,
+    found: false,
+    searched: core,
+    ...(debug
+      ? {
+          debug: {
+            spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+            tabName: process.env.GOOGLE_SHEETS_TAB_NAME || "data",
+            rowsLoaded: rows.length,
+            sampleUpcFromFirstRow: rows[0]?.upcNumber || null,
+            sampleRetailPerUnitFromFirstRow: rows[0]?.retailPerUnit || null
+          }
+        }
+      : {})
+  });
+}
 
 
     const retail = parseMoney(match.retailPerUnit);
@@ -203,6 +223,7 @@ if (!match) return NextResponse.json({ ok: true, found: false, searched: core })
         description: match.description,
         itemNumber: match.itemNumber,
         category: match.categoryDescription,
+          retailRaw: match.retailPerUnit,
         retail: roundMoney(retail),
         tier1: roundMoney(retail * 0.7),
         tier2: roundMoney(retail * 0.5),
