@@ -207,8 +207,7 @@ export default function Page() {
             <div className="mt-3 text-xs text-slate-500">
               {mode === "upc" ? (
                 <>
-                  UPC scans convert to manifest style: <span className="text-slate-300">00 + first 11 digits</span>{" "}
-                  (check digit dropped).
+                  UPC scans match the sheet using the <span className="text-slate-300">first 11 digits</span> (check digit dropped).
                 </>
               ) : (
                 <>ItemNumber must match exactly what’s in your Google Sheet.</>
