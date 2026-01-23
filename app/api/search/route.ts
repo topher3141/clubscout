@@ -84,8 +84,7 @@ async function fetchRows(): Promise<Row[]> {
   const auth = getAuthClient();
   const sheets = google.sheets({ version: "v4", auth });
 
-  // We read A:K because your sheet includes columns through "Retail per Unit"
-  const range = `${tabName}!A1:K`;
+  const range = `${tabName}!A1:L`;
 const res = await sheets.spreadsheets.values.get({
   spreadsheetId,
   range,
@@ -117,8 +116,9 @@ let iRetailPerUnit = idxAny([
   "Retail per unit (USD)"
 ]);
 
-// Fallback to column K (A=0 ... K=10) if header matching fails
-if (iRetailPerUnit < 0) iRetailPerUnit = 10;
+// Fallback to column L (A=0 ... L=11) if header matching fails
+if (iRetailPerUnit < 0) iRetailPerUnit = 11;
+
 
   const rows: Row[] = [];
   for (let r = 1; r < values.length; r++) {
