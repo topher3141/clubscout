@@ -86,7 +86,11 @@ async function fetchRows(): Promise<Row[]> {
 
   // We read A:K because your sheet includes columns through "Retail per Unit"
   const range = `${tabName}!A1:K`;
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+const res = await sheets.spreadsheets.values.get({
+  spreadsheetId,
+  range,
+  valueRenderOption: "UNFORMATTED_VALUE"
+});
   const values = res.data.values || [];
   if (values.length < 2) return [];
 
