@@ -120,7 +120,7 @@ export default function Page() {
             </div>
             <div>
               <div className="text-lg font-extrabold tracking-tight text-slate-100">ClubScout</div>
-              <div className="text-xs text-slate-400">Sam’s Club liquidation lookup</div>
+              <div className="text-xs text-slate-400">Liquidation Lookup Tool</div>
             </div>
           </div>
 
