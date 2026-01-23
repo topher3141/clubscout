@@ -14,20 +14,26 @@ function digitsOnly(input: string): string {
 }
 
 /**
- * Convert scanned/typed UPC into your manifest "alt ean13 style":
- * - UPC-A is 12 digits including check digit
- * - Manifest stores: "00" + first 11 digits (drops check digit)
- * Example: 193968502553 -> 0019396850255
+ * Convert scanned/typed UPC into the 11-digit "core" that matches your sheet.
+ * - UPC-A scan is 12 digits including check digit -> drop last digit -> 11 digits
+ * - If user enters 11 digits, accept directly
+ * - If user enters 13 digits, strip leading zeros then drop check digit if needed
  */
-function upcToAltEan13(input: string): string | null {
-  const d = digitsOnly(input);
+function upcToCore11(input: string): string | null {
+  let d = digitsOnly(input);
 
-  if (d.length === 12) return "00" + d.slice(0, 11);
-  if (d.length === 11) return "00" + d;
-  if (d.length === 13 && d.startsWith("00")) return d;
+  // If someone pastes 13-digit EAN-ish, remove leading zeros first
+  if (d.length === 13) d = d.replace(/^0+/, "");
+
+  // UPC-A (12) -> core 11 (drop check digit)
+  if (d.length === 12) return d.slice(0, 11);
+
+  // Already core
+  if (d.length === 11) return d;
 
   return null;
 }
+
 
 function parseMoney(val: any): number {
   const cleaned = (val ?? "").toString().replace(/[$,]/g, "").trim();
@@ -96,8 +102,7 @@ async function fetchRows(): Promise<Row[]> {
       importDate: getAt(row, iImportDate),
       description: getAt(row, iDescription),
       itemNumber,
-      upcNumber: digitsOnly(upcNumber),
-      categoryDescription: getAt(row, iCatDesc),
+      upcNumber: digitsOnly(upcNumber).replace(/^0+/, ""),      categoryDescription: getAt(row, iCatDesc),
       retailPerUnit: getAt(row, iRetailPerUnit)
     });
   }
@@ -148,16 +153,17 @@ export async function GET(req: Request) {
       });
     }
 
-    const alt = upcToAltEan13(q);
-    if (!alt) {
-      return NextResponse.json(
-        { ok: false, error: "UPC must be 12 digits (UPC-A) or 13 digits starting with 00." },
-        { status: 400 }
-      );
-    }
+const core = upcToCore11(q);
+if (!core) {
+  return NextResponse.json(
+    { ok: false, error: "UPC must be 12 digits (UPC-A) or 11 digits (core without check digit)." },
+    { status: 400 }
+  );
+}
 
-    const match = rows.find((r) => r.upcNumber === alt);
-    if (!match) return NextResponse.json({ ok: true, found: false, searched: alt });
+const match = rows.find((r) => r.upcNumber === core);
+if (!match) return NextResponse.json({ ok: true, found: false, searched: core });
+
 
     const retail = parseMoney(match.retailPerUnit);
 
