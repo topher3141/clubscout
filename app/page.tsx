@@ -111,13 +111,15 @@ export default function Page() {
 
   useScannerAutoSearch({ value: query, mode, onSearch: doSearch });
 
-  const clear = () => {
-    setQuery("");
-    setError(null);
-    setFound(null);
-    setResult(null);
-    setSearched(null);
-  };
+const clear = () => {
+  setQuery("");
+  setError(null);
+  setFound(null);
+  setResult(null);
+  setSearched(null);
+  focusInput();
+};
+
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") doSearch();
@@ -242,7 +244,7 @@ export default function Page() {
             <div className="mt-3 text-xs text-slate-500">
               {mode === "upc" ? (
                 <>
-                  UPC scans match the sheet using the <span className="text-slate-300">first 11 digits</span> (check digit dropped).
+UPC scans match the sheet using the <span className="text-slate-300">first 11 digits</span> (check digit dropped). Leading zeros are handled automatically.
                 </>
               ) : (
                 <>ItemNumber must match exactly what’s in your Google Sheet.</>
@@ -301,13 +303,13 @@ export default function Page() {
 
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
                     <div className="text-xs font-semibold text-slate-400">Tier 1</div>
-                    <div className="mt-1 text-2xl font-extrabold text-sams-200">{money(result.tier1)}</div>
+<div className="mt-1 text-2xl font-extrabold text-green-300">{money(result.tier1)}</div>
                     <div className="mt-1 text-xs text-slate-500">30% off retail</div>
                   </div>
 
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
                     <div className="text-xs font-semibold text-slate-400">Tier 2</div>
-                    <div className="mt-1 text-2xl font-extrabold text-sams-200">{money(result.tier2)}</div>
+<div className="mt-1 text-2xl font-extrabold text-yellow-300">{money(result.tier2)}</div>
                     <div className="mt-1 text-xs text-slate-500">50% off retail</div>
                   </div>
                 </div>
