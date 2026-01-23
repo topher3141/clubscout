@@ -177,14 +177,16 @@ export default function Page() {
           <div className="p-5 pt-2">
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder={mode === "upc" ? "Scan or enter UPC-A (12 digits)..." : "Enter ItemNumber..."}
-                inputMode={mode === "upc" ? "numeric" : "text"}
-                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sams-400"
-              />
+  autoFocus
+  value={query}
+  onChange={(e) => setQuery(e.target.value)}
+  onKeyDown={onKeyDown}
+  placeholder={mode === "upc" ? "Scan or enter UPC-A (12 digits)..." : "Enter ItemNumber..."}
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sams-400"
+/>
+
               <div className="flex gap-2">
                 <button
                   onClick={doSearch}
