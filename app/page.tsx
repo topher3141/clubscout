@@ -44,7 +44,6 @@ function useScannerAutoSearch(opts: { value: string; mode: Mode; onSearch: () =>
     if (mode !== "upc") return;
 
     const digits = value.replace(/\D/g, "");
-    // UPC-A = 12 digits. Some scanners may send 13 digits (EAN-ish) too.
     const looksLikeUpc =
       digits.length === 12 || digits.length === 13 || digits.length === 11 || digits.length === 10;
 
@@ -181,7 +180,13 @@ export default function Page() {
           <div className={shellPadTop}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className={ultra ? "text-lg font-extrabold tracking-tight text-slate-100" : "text-xl font-extrabold tracking-tight text-slate-100"}>
+                <div
+                  className={
+                    ultra
+                      ? "text-lg font-extrabold tracking-tight text-slate-100"
+                      : "text-xl font-extrabold tracking-tight text-slate-100"
+                  }
+                >
                   Lookup
                 </div>
                 {!ultra && (
@@ -247,6 +252,17 @@ export default function Page() {
             {/* Ultra mode: show pricing area first so it’s always visible without scrolling */}
             {ultra && (
               <div className="mb-3">
+                {/* Item name (one line, slightly larger) */}
+                <div className="mb-2">
+                  <div className="text-[15px] font-extrabold tracking-tight text-slate-100 line-clamp-1">
+                    {result?.description ? result.description : "Ready to scan."}
+                  </div>
+                  <div className="mt-0.5 text-xs text-slate-500">
+                    {result ? "Pricing snapshot" : "Scan UPC or enter ItemNumber"}
+                  </div>
+                </div>
+
+                {/* Pricing tiles */}
                 <div className="grid gap-2 grid-cols-2">
                   <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
                     <div className="text-xs font-semibold text-slate-400">Retail</div>
@@ -273,17 +289,7 @@ export default function Page() {
                   </div>
                 </div>
 
-                {/* Compact metadata line */}
-                <div className="mt-2 text-xs text-slate-500">
-                  {result ? (
-                    <span className="text-slate-300">
-                      {result.itemNumber} • {result.category} • UPC {result.upcNumber}
-                    </span>
-                  ) : (
-                    <span>Ready to scan.</span>
-                  )}
-                </div>
-
+                {/* Errors show here but do not push the pricing tiles off-screen too much */}
                 {error && (
                   <div className="mt-2 rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm text-red-200">
                     {error}
@@ -322,6 +328,37 @@ export default function Page() {
                 </button>
               </div>
             </div>
+
+            {/* Ultra mode: detailed info lives BELOW the search bar (scroll if you want more) */}
+            {ultra && result && (
+              <div className="mt-3">
+                <div className="text-xs font-semibold text-slate-400 mb-2">Details</div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+                    <div className="text-[11px] font-semibold text-slate-400">ItemNumber</div>
+                    <div className="mt-1 text-sm font-bold text-slate-100">{result.itemNumber || "—"}</div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+                    <div className="text-[11px] font-semibold text-slate-400">UPC (sheet)</div>
+                    <div className="mt-1 text-sm font-bold text-slate-100 font-mono">{result.upcNumber || "—"}</div>
+                  </div>
+
+                  <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+                    <div className="text-[11px] font-semibold text-slate-400">Category</div>
+                    <div className="mt-1 text-sm font-bold text-slate-100">{result.category || "—"}</div>
+                  </div>
+
+                  <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+                    <div className="text-[11px] font-semibold text-slate-400">UPC key searched</div>
+                    <div className="mt-1 text-sm font-bold text-slate-100 font-mono">
+                      {searched || "—"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Non-ultra mode keeps your original detail view */}
             {!ultra && (
@@ -410,7 +447,9 @@ export default function Page() {
         </div>
 
         {!ultra && (
-          <div className="mt-6 text-center text-xs text-slate-600">ClubScout • Vercel + Google Sheets • Sam’s Blue UI</div>
+          <div className="mt-6 text-center text-xs text-slate-600">
+            ClubScout • Vercel + Google Sheets • Sam’s Blue UI
+          </div>
         )}
       </main>
     </div>
