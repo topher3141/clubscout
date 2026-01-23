@@ -47,8 +47,19 @@ function roundMoney(n: number): number {
 
 function getAuthClient() {
   const clientEmail = requiredEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  let privateKey = requiredEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
-  privateKey = privateKey.replace(/\\n/g, "\n");
+let privateKey = requiredEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").trim();
+
+// If you pasted with surrounding quotes in Vercel, remove them
+if (
+  (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+  (privateKey.startsWith("'") && privateKey.endsWith("'"))
+) {
+  privateKey = privateKey.slice(1, -1);
+}
+
+// Turn literal \n into real newlines + remove CR characters
+privateKey = privateKey.replace(/\\n/g, "\n").replace(/\r/g, "");
+
 
   return new google.auth.JWT({
     email: clientEmail,
