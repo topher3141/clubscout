@@ -26,13 +26,17 @@ function upcToCore11(input: string): string | null {
   if (d.length === 13) d = d.replace(/^0+/, "");
 
   // UPC-A (12) -> core 11 (drop check digit)
-  if (d.length === 12) return d.slice(0, 11);
+  if (d.length === 12) return d.slice(0, 11).replace(/^0+/, "");
 
   // Already core
-  if (d.length === 11) return d;
+  if (d.length === 11) return d.replace(/^0+/, "");
+
+  // Some sheets drop leading zeros and can become 10 digits
+  if (d.length === 10) return d;
 
   return null;
 }
+
 
 
 function parseMoney(val: any): number {
@@ -181,8 +185,9 @@ export async function GET(req: Request) {
           itemNumber: match.itemNumber,
           category: match.categoryDescription,
           retail: roundMoney(retail),
-          tier1: roundMoney(retail * 0.7),
-          tier2: roundMoney(retail * 0.5),
+          tier1: Math.round(retail * 0.7), // nearest dollar
+          tier2: Math.ceil(retail * 0.5),  // always round up
+
           upcNumber: match.upcNumber
         }
       });
