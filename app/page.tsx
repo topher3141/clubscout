@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 
 type Mode = "upc" | "item";
 
@@ -12,6 +13,21 @@ type LookupResult = {
   tier1: number;
   tier2: number;
   upcNumber: string;
+};
+
+const BRAND = {
+  // Inspired by your attached logo (cream + magenta + deep teal)
+  bg: "#050B10",
+  panel: "rgba(10, 22, 30, 0.55)",
+  panel2: "rgba(7, 15, 22, 0.55)",
+  border: "rgba(255,255,255,0.10)",
+  teal: "#0D6E7F",
+  teal2: "#0A5462",
+  cream: "#EFE6DC",
+  magenta: "#D3457B",
+  magenta2: "#B63767",
+  text: "#EAF2F6",
+  muted: "rgba(234,242,246,0.65)"
 };
 
 function money2(n: number) {
@@ -76,7 +92,7 @@ export default function Page() {
   const [error, setError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<LookupResult | null>(null);
 
-  // Source of truth for pricing math (rounding rules)
+  // Pricing math (rounding rules)
   const retail = result?.retail ?? 0;
   const tier1Rounded = Math.round(retail * 0.7); // nearest dollar
   const tier2Rounded = Math.ceil(retail * 0.5); // always round up
@@ -117,7 +133,6 @@ export default function Page() {
       setError(e?.message || "Unexpected error");
       setLoading(false);
     } finally {
-      // Clear and refocus for next scan/value
       setQuery("");
       focusInput();
     }
@@ -138,37 +153,79 @@ export default function Page() {
     if (e.key === "Enter") doSearch();
   };
 
-  // Ultra mode: keep everything on screen, reduce vertical space
+  // Keep spacing the same; only style changes
   const mainClass = ultra ? "mx-auto max-w-4xl px-3 py-3" : "mx-auto max-w-4xl px-4 py-4";
   const shellPadTop = ultra ? "p-3 pb-2" : "p-4 pb-2";
   const shellPadBody = ultra ? "p-3 pt-2" : "p-4 pt-2";
 
+  const cardBase =
+    "rounded-2xl border shadow-soft";
+
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-800 bg-slate-950/70 backdrop-blur">
+    <div
+      className="min-h-screen"
+      style={{
+        background: `radial-gradient(1200px 600px at 10% 0%, rgba(13,110,127,0.22), transparent 55%),
+                     radial-gradient(900px 500px at 95% 10%, rgba(211,69,123,0.18), transparent 52%),
+                     ${BRAND.bg}`
+      }}
+    >
+      <header
+        className="border-b backdrop-blur"
+        style={{
+          borderColor: BRAND.border,
+          background: "rgba(5, 11, 16, 0.65)"
+        }}
+      >
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-2">
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-2xl bg-sams-700 shadow-soft">
-              <span className="text-lg font-extrabold text-white">CS</span>
+            {/* Icon tile (replaces CS) */}
+            <div
+              className="grid h-9 w-9 place-items-center rounded-2xl overflow-hidden"
+              style={{
+                background: `linear-gradient(180deg, rgba(239,230,220,0.10), rgba(239,230,220,0.04))`,
+                border: `1px solid ${BRAND.border}`
+              }}
+            >
+              <Image
+                src="https://i.imgur.com/T6J8wW7.png"
+                alt="ClubScout"
+                width={36}
+                height={36}
+                priority
+              />
             </div>
+
             <div>
-              <div className="text-lg font-extrabold tracking-tight text-slate-100">ClubScout</div>
-              <div className="text-xs text-slate-400">Liquidation Lookup Tool</div>
+              <div className="text-lg font-extrabold tracking-tight" style={{ color: BRAND.text }}>
+                ClubScout
+              </div>
+              <div className="text-xs" style={{ color: BRAND.muted }}>
+                Liquidation Lookup Tool
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="flex select-none items-center gap-2 text-xs text-slate-300">
+            <label className="flex select-none items-center gap-2 text-xs" style={{ color: BRAND.text }}>
               <input
                 type="checkbox"
                 checked={ultra}
                 onChange={(e) => setUltra(e.target.checked)}
-                className="h-4 w-4 accent-[#1a89ff]"
+                className="h-4 w-4"
+                style={{ accentColor: BRAND.magenta }}
               />
               Ultra
             </label>
 
-            <span className="rounded-full border border-sams-700/60 bg-sams-900/20 px-3 py-1 text-xs font-semibold text-sams-100">
+            <span
+              className="rounded-full px-3 py-1 text-xs font-semibold"
+              style={{
+                border: `1px solid rgba(13,110,127,0.55)`,
+                background: "rgba(13,110,127,0.12)",
+                color: "rgba(234,242,246,0.95)"
+              }}
+            >
               Internal
             </span>
           </div>
@@ -176,21 +233,24 @@ export default function Page() {
       </header>
 
       <main className={mainClass}>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 shadow-soft">
+        <div
+          className={cardBase}
+          style={{
+            borderColor: BRAND.border,
+            background: BRAND.panel
+          }}
+        >
           <div className={shellPadTop}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div
-                  className={
-                    ultra
-                      ? "text-lg font-extrabold tracking-tight text-slate-100"
-                      : "text-xl font-extrabold tracking-tight text-slate-100"
-                  }
+                  className={ultra ? "text-lg font-extrabold tracking-tight" : "text-xl font-extrabold tracking-tight"}
+                  style={{ color: BRAND.text }}
                 >
                   Lookup
                 </div>
                 {!ultra && (
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm" style={{ color: BRAND.muted }}>
                     Scan UPC (auto-search) or search by ItemNumber.
                   </div>
                 )}
@@ -204,34 +264,35 @@ export default function Page() {
                       clear();
                       focusInput();
                     }}
-                    className={
-                      "rounded-xl px-3 py-2 text-sm font-semibold transition " +
-                      (mode === "upc"
-                        ? "bg-sams-700 text-white"
-                        : "bg-slate-950 text-slate-300 hover:bg-slate-800")
-                    }
+                    className="rounded-xl px-3 py-2 text-sm font-semibold transition"
+                    style={{
+                      background: mode === "upc" ? BRAND.teal : "rgba(5,11,16,0.55)",
+                      color: mode === "upc" ? "white" : "rgba(234,242,246,0.85)",
+                      border: `1px solid ${mode === "upc" ? "rgba(13,110,127,0.70)" : BRAND.border}`
+                    }}
                   >
                     UPC
                   </button>
+
                   <button
                     onClick={() => {
                       setMode("item");
                       clear();
                       focusInput();
                     }}
-                    className={
-                      "rounded-xl px-3 py-2 text-sm font-semibold transition " +
-                      (mode === "item"
-                        ? "bg-sams-700 text-white"
-                        : "bg-slate-950 text-slate-300 hover:bg-slate-800")
-                    }
+                    className="rounded-xl px-3 py-2 text-sm font-semibold transition"
+                    style={{
+                      background: mode === "item" ? BRAND.teal : "rgba(5,11,16,0.55)",
+                      color: mode === "item" ? "white" : "rgba(234,242,246,0.85)",
+                      border: `1px solid ${mode === "item" ? "rgba(13,110,127,0.70)" : BRAND.border}`
+                    }}
                   >
                     ItemNumber
                   </button>
                 </div>
 
                 {mode === "upc" && (
-                  <label className="flex select-none items-center gap-2 text-xs text-slate-300">
+                  <label className="flex select-none items-center gap-2 text-xs" style={{ color: BRAND.text }}>
                     <input
                       type="checkbox"
                       checked={scanMode}
@@ -239,7 +300,8 @@ export default function Page() {
                         setScanMode(e.target.checked);
                         focusInput();
                       }}
-                      className="h-4 w-4 accent-[#1a89ff]"
+                      className="h-4 w-4"
+                      style={{ accentColor: BRAND.magenta }}
                     />
                     Scan Mode (hide keyboard)
                   </label>
@@ -249,49 +311,88 @@ export default function Page() {
           </div>
 
           <div className={shellPadBody}>
-            {/* Ultra mode: show pricing area first so it’s always visible without scrolling */}
+            {/* Ultra mode: pricing first */}
             {ultra && (
               <div className="mb-3">
-                {/* Item name (one line, slightly larger) */}
+                {/* Item name one-line */}
                 <div className="mb-2">
-                  <div className="text-[15px] font-extrabold tracking-tight text-slate-100 line-clamp-1">
+                  <div
+                    className="text-[15px] font-extrabold tracking-tight line-clamp-1"
+                    style={{ color: BRAND.text }}
+                  >
                     {result?.description ? result.description : "Ready to scan."}
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-500">
+                  <div className="mt-0.5 text-xs" style={{ color: BRAND.muted }}>
                     {result ? "Pricing snapshot" : "Scan UPC or enter ItemNumber"}
                   </div>
                 </div>
 
                 {/* Pricing tiles */}
                 <div className="grid gap-2 grid-cols-2">
-                  <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-xs font-semibold text-slate-400">Retail</div>
-                    <div className="mt-1 text-2xl font-extrabold text-slate-100">
+                  <div
+                    className="col-span-2 rounded-2xl border p-3"
+                    style={{
+                      borderColor: BRAND.border,
+                      background: BRAND.panel2
+                    }}
+                  >
+                    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                      Retail
+                    </div>
+                    <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
                       {result ? money2(retail) : "—"}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">Retail per Unit</div>
+                    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                      Retail per Unit
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-xs font-semibold text-slate-400">Tier 1</div>
-                    <div className="mt-1 text-2xl font-extrabold text-green-300">
+                  <div
+                    className="rounded-2xl border p-3"
+                    style={{
+                      borderColor: "rgba(13,110,127,0.40)",
+                      background: BRAND.panel2
+                    }}
+                  >
+                    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                      Tier 1
+                    </div>
+                    <div className="mt-1 text-2xl font-extrabold" style={{ color: "rgba(110, 231, 183, 0.95)" }}>
                       {result ? money0(tier1Rounded) : "—"}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">30% off (rounded)</div>
+                    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                      30% off (rounded)
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-xs font-semibold text-slate-400">Tier 2</div>
-                    <div className="mt-1 text-2xl font-extrabold text-yellow-300">
+                  <div
+                    className="rounded-2xl border p-3"
+                    style={{
+                      borderColor: "rgba(211,69,123,0.35)",
+                      background: BRAND.panel2
+                    }}
+                  >
+                    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                      Tier 2
+                    </div>
+                    <div className="mt-1 text-2xl font-extrabold" style={{ color: "rgba(253, 224, 71, 0.95)" }}>
                       {result ? money0(tier2Rounded) : "—"}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">50% off (round up)</div>
+                    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                      50% off (round up)
+                    </div>
                   </div>
                 </div>
 
-                {/* Errors show here but do not push the pricing tiles off-screen too much */}
                 {error && (
-                  <div className="mt-2 rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm text-red-200">
+                  <div
+                    className="mt-2 rounded-xl border p-3 text-sm"
+                    style={{
+                      borderColor: "rgba(248,113,113,0.35)",
+                      background: "rgba(127,29,29,0.25)",
+                      color: "rgba(254,226,226,0.95)"
+                    }}
+                  >
                     {error}
                   </div>
                 )}
@@ -309,50 +410,96 @@ export default function Page() {
                 placeholder={mode === "upc" ? "Scan or enter UPC..." : "Enter ItemNumber..."}
                 inputMode={mode === "upc" && scanMode ? "none" : "numeric"}
                 pattern="[0-9]*"
-                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sams-400"
+                className="w-full rounded-xl px-4 py-3 text-base focus:outline-none"
+                style={{
+                  border: `1px solid ${BRAND.border}`,
+                  background: "rgba(3, 8, 12, 0.65)",
+                  color: BRAND.text,
+                  boxShadow: "0 0 0 0 rgba(0,0,0,0)",
+                  outline: "none"
+                }}
               />
 
               <div className="flex gap-2">
                 <button
                   onClick={doSearch}
                   disabled={loading || !query.trim()}
-                  className="inline-flex items-center justify-center rounded-xl bg-sams-600 px-4 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sams-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{
+                    background: `linear-gradient(180deg, ${BRAND.magenta}, ${BRAND.magenta2})`,
+                    color: "white",
+                    border: "1px solid rgba(211,69,123,0.55)"
+                  }}
                 >
                   {loading ? "Searching..." : "Search"}
                 </button>
+
                 <button
                   onClick={clear}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition"
+                  style={{
+                    background: "rgba(3, 8, 12, 0.65)",
+                    color: "rgba(234,242,246,0.92)",
+                    border: `1px solid ${BRAND.border}`
+                  }}
                 >
                   Clear
                 </button>
               </div>
             </div>
 
-            {/* Ultra mode: detailed info lives BELOW the search bar (scroll if you want more) */}
+            {/* Ultra details below search (scroll for more) */}
             {ultra && result && (
               <div className="mt-3">
-                <div className="text-xs font-semibold text-slate-400 mb-2">Details</div>
+                <div className="text-xs font-semibold mb-2" style={{ color: BRAND.muted }}>
+                  Details
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-[11px] font-semibold text-slate-400">ItemNumber</div>
-                    <div className="mt-1 text-sm font-bold text-slate-100">{result.itemNumber || "—"}</div>
+                  <div
+                    className="rounded-2xl border p-3"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+                  >
+                    <div className="text-[11px] font-semibold" style={{ color: BRAND.muted }}>
+                      ItemNumber
+                    </div>
+                    <div className="mt-1 text-sm font-bold" style={{ color: BRAND.text }}>
+                      {result.itemNumber || "—"}
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-[11px] font-semibold text-slate-400">UPC (sheet)</div>
-                    <div className="mt-1 text-sm font-bold text-slate-100 font-mono">{result.upcNumber || "—"}</div>
+                  <div
+                    className="rounded-2xl border p-3"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+                  >
+                    <div className="text-[11px] font-semibold" style={{ color: BRAND.muted }}>
+                      UPC (sheet)
+                    </div>
+                    <div className="mt-1 text-sm font-bold font-mono" style={{ color: BRAND.text }}>
+                      {result.upcNumber || "—"}
+                    </div>
                   </div>
 
-                  <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-[11px] font-semibold text-slate-400">Category</div>
-                    <div className="mt-1 text-sm font-bold text-slate-100">{result.category || "—"}</div>
+                  <div
+                    className="col-span-2 rounded-2xl border p-3"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+                  >
+                    <div className="text-[11px] font-semibold" style={{ color: BRAND.muted }}>
+                      Category
+                    </div>
+                    <div className="mt-1 text-sm font-bold" style={{ color: BRAND.text }}>
+                      {result.category || "—"}
+                    </div>
                   </div>
 
-                  <div className="col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                    <div className="text-[11px] font-semibold text-slate-400">UPC key searched</div>
-                    <div className="mt-1 text-sm font-bold text-slate-100 font-mono">
+                  <div
+                    className="col-span-2 rounded-2xl border p-3"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+                  >
+                    <div className="text-[11px] font-semibold" style={{ color: BRAND.muted }}>
+                      UPC key searched
+                    </div>
+                    <div className="mt-1 text-sm font-bold font-mono" style={{ color: BRAND.text }}>
                       {searched || "—"}
                     </div>
                   </div>
@@ -360,14 +507,14 @@ export default function Page() {
               </div>
             )}
 
-            {/* Non-ultra mode keeps your original detail view */}
+            {/* Non-ultra mode keeps a fuller view */}
             {!ultra && (
               <>
-                <div className="mt-3 text-xs text-slate-500">
+                <div className="mt-3 text-xs" style={{ color: BRAND.muted }}>
                   {mode === "upc" ? (
                     <>
                       UPC scans match the sheet using the{" "}
-                      <span className="text-slate-300">first 11 digits</span> (check digit dropped). Leading zeros are
+                      <span style={{ color: BRAND.cream }}>first 11 digits</span> (check digit dropped). Leading zeros are
                       handled automatically.
                     </>
                   ) : (
@@ -375,69 +522,127 @@ export default function Page() {
                   )}
                 </div>
 
-                <div className="my-3 h-px w-full bg-slate-800" />
+                <div className="my-3 h-px w-full" style={{ background: BRAND.border }} />
 
                 {error && (
-                  <div className="rounded-xl border border-red-900/50 bg-red-950/30 p-4 text-sm text-red-200">
+                  <div
+                    className="rounded-xl border p-4 text-sm"
+                    style={{
+                      borderColor: "rgba(248,113,113,0.35)",
+                      background: "rgba(127,29,29,0.25)",
+                      color: "rgba(254,226,226,0.95)"
+                    }}
+                  >
                     {error}
                   </div>
                 )}
 
                 {searched && (
-                  <div className="mb-3 text-xs text-slate-500">
-                    Searching UPC key: <span className="font-mono text-slate-300">{searched}</span>
+                  <div className="mb-3 text-xs" style={{ color: BRAND.muted }}>
+                    Searching UPC key: <span className="font-mono" style={{ color: BRAND.cream }}>{searched}</span>
                   </div>
                 )}
 
                 {found === false && (
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-6">
-                    <div className="text-base font-bold text-slate-100">No match found</div>
-                    <div className="mt-1 text-sm text-slate-400">Try scanning again or confirm the UPC / ItemNumber.</div>
+                  <div
+                    className="rounded-2xl border p-6"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+                  >
+                    <div className="text-base font-bold" style={{ color: BRAND.text }}>
+                      No match found
+                    </div>
+                    <div className="mt-1 text-sm" style={{ color: BRAND.muted }}>
+                      Try scanning again or confirm the UPC / ItemNumber.
+                    </div>
                   </div>
                 )}
 
                 {result && (
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-6">
-                    <div className="text-lg font-extrabold leading-snug text-slate-100">{result.description || "—"}</div>
+                  <div
+                    className="rounded-2xl border p-6"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+                  >
+                    <div className="text-lg font-extrabold leading-snug" style={{ color: BRAND.text }}>
+                      {result.description || "—"}
+                    </div>
 
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-200">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-semibold"
+                        style={{ border: `1px solid ${BRAND.border}`, background: "rgba(3, 8, 12, 0.55)", color: BRAND.text }}
+                      >
                         Item {result.itemNumber}
                       </span>
-                      <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-200">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-semibold"
+                        style={{ border: `1px solid ${BRAND.border}`, background: "rgba(3, 8, 12, 0.55)", color: BRAND.text }}
+                      >
                         Category: {result.category || "—"}
                       </span>
-                      <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-200">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-semibold"
+                        style={{ border: `1px solid ${BRAND.border}`, background: "rgba(3, 8, 12, 0.55)", color: BRAND.text }}
+                      >
                         UPC: <span className="font-mono">{result.upcNumber || "—"}</span>
                       </span>
                     </div>
 
-                    <div className="my-3 h-px w-full bg-slate-800" />
+                    <div className="my-3 h-px w-full" style={{ background: BRAND.border }} />
 
                     <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-                      <div className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
-                        <div className="text-xs font-semibold text-slate-400">Retail</div>
-                        <div className="mt-1 text-xl sm:text-2xl font-extrabold text-slate-100">{money2(retail)}</div>
-                        <div className="mt-1 text-xs text-slate-500">Retail per Unit</div>
+                      <div
+                        className="col-span-2 sm:col-span-1 rounded-2xl border p-3"
+                        style={{ borderColor: BRAND.border, background: BRAND.panel }}
+                      >
+                        <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                          Retail
+                        </div>
+                        <div className="mt-1 text-xl sm:text-2xl font-extrabold" style={{ color: BRAND.cream }}>
+                          {money2(retail)}
+                        </div>
+                        <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                          Retail per Unit
+                        </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
-                        <div className="text-xs font-semibold text-slate-400">Tier 1</div>
-                        <div className="mt-1 text-xl sm:text-2xl font-extrabold text-green-300">{money0(tier1Rounded)}</div>
-                        <div className="mt-1 text-xs text-slate-500">30% off (rounded)</div>
+                      <div
+                        className="rounded-2xl border p-3"
+                        style={{ borderColor: "rgba(13,110,127,0.40)", background: BRAND.panel }}
+                      >
+                        <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                          Tier 1
+                        </div>
+                        <div className="mt-1 text-xl sm:text-2xl font-extrabold" style={{ color: "rgba(110, 231, 183, 0.95)" }}>
+                          {money0(tier1Rounded)}
+                        </div>
+                        <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                          30% off (rounded)
+                        </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
-                        <div className="text-xs font-semibold text-slate-400">Tier 2</div>
-                        <div className="mt-1 text-xl sm:text-2xl font-extrabold text-yellow-300">{money0(tier2Rounded)}</div>
-                        <div className="mt-1 text-xs text-slate-500">50% off (round up)</div>
+                      <div
+                        className="rounded-2xl border p-3"
+                        style={{ borderColor: "rgba(211,69,123,0.35)", background: BRAND.panel }}
+                      >
+                        <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                          Tier 2
+                        </div>
+                        <div className="mt-1 text-xl sm:text-2xl font-extrabold" style={{ color: "rgba(253, 224, 71, 0.95)" }}>
+                          {money0(tier2Rounded)}
+                        </div>
+                        <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                          50% off (round up)
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {found === null && !error && !result && (
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-400">
+                  <div
+                    className="rounded-2xl border p-6 text-sm"
+                    style={{ borderColor: BRAND.border, background: BRAND.panel2, color: BRAND.muted }}
+                  >
                     Ready. {mode === "upc" ? "Scan a UPC to auto-search." : "Enter an ItemNumber and press Search."}
                   </div>
                 )}
@@ -447,8 +652,8 @@ export default function Page() {
         </div>
 
         {!ultra && (
-          <div className="mt-6 text-center text-xs text-slate-600">
-            ClubScout • Vercel + Google Sheets • Sam’s Blue UI
+          <div className="mt-6 text-center text-xs" style={{ color: "rgba(234,242,246,0.35)" }}>
+            ClubScout • Vercel + Google Sheets
           </div>
         )}
       </main>
