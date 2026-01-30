@@ -131,7 +131,7 @@ function calcApparelPrice(retail: number) {
   if (retail <= 22.99) return 8;
   if (retail <= 27.99) return 10;
   if (retail <= 30.99) return 12;
-  if (retail <= 36.99) return 15;
+  if (retail <= 39.99) return 15;
   if (retail <= 44.99) return 20;
   return 25; // 50+
 }
