@@ -116,10 +116,37 @@ export default function Page() {
   const [error, setError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<LookupResult | null>(null);
 
-  // Pricing math (UI is source of truth for rounding rules)
-  const retail = result?.retail ?? 0;
-  const tier1Rounded = Math.round(retail * 0.7); // nearest dollar
-  const tier2Rounded = Math.ceil(retail * 0.5); // always round up
+// Apparel category exact matches (must match sheet Category description exactly)
+const APPAREL_CATEGORIES = new Set([
+  "MENS APPAREL",
+  "BASIC APPAREL",
+  "ACCESSORIES",
+  "LADIES APPAREL",
+  "CHILDRENS APPAREL"
+]);
+
+function calcApparelPrice(retail: number) {
+  // Brackets based on Retail per Unit
+  if (retail <= 19.99) return 6;
+  if (retail <= 24.99) return 8;
+  if (retail <= 29.99) return 10;
+  if (retail <= 34.99) return 12;
+  if (retail <= 40.99) return 15;
+  if (retail <= 49.99) return 20;
+  return 25; // 50+
+}
+
+// Pricing math (UI is source of truth for rounding rules)
+const retail = result?.retail ?? 0;
+
+// tier rules
+const tier1Rounded = Math.round(retail * 0.7); // nearest dollar
+const tier2Rounded = Math.ceil(retail * 0.5); // always round up
+
+// apparel rules
+const isApparel = !!result?.category && APPAREL_CATEGORIES.has(result.category.trim());
+const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
+
 
   const doSearch = React.useCallback(async () => {
     const q = query.trim();
@@ -298,39 +325,74 @@ export default function Page() {
             </div>
 
             {/* Pricing tiles (always visible) */}
-            <div className="grid gap-2 grid-cols-2">
-              <div className="col-span-2 rounded-2xl border p-3" style={{ borderColor: BRAND.border, background: BRAND.panel2 }}>
-                <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-                  Retail
-                </div>
-                <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
-                  {result ? money2(retail) : "—"}
-                </div>
-                <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-                  Retail per Unit
-                </div>
-              </div>
+ <div className="grid gap-2 grid-cols-2">
+  {/* Retail always on top */}
+  <div className="col-span-2 rounded-2xl border p-3" style={{ borderColor: BRAND.border, background: BRAND.panel2 }}>
+    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+      Retail
+    </div>
+    <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
+      {result ? money2(retail) : "—"}
+    </div>
+    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+      Retail per Unit
+    </div>
+  </div>
 
-              <div className="rounded-2xl border p-3" style={{ borderColor: "rgba(13,110,127,0.40)", background: BRAND.panel2 }}>
-                <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-                  Tier 1
-                </div>
-                <div className="mt-1 text-2xl font-extrabold text-green-300">{result ? money0(tier1Rounded) : "—"}</div>
-                <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-                  30% off (rounded)
-                </div>
-              </div>
+  {/* Apparel Price ONLY when category matches */}
+  {isApparel && (
+    <div
+      className="rounded-2xl border p-3"
+      style={{
+        borderColor: "rgba(239,230,220,0.28)",
+        background: BRAND.panel2
+      }}
+    >
+      <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+        Apparel Price
+      </div>
+      <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
+        {result ? money0(apparelPrice ?? 0) : "—"}
+      </div>
+      <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+        Category matrix
+      </div>
+    </div>
+  )}
 
-              <div className="rounded-2xl border p-3" style={{ borderColor: "rgba(211,69,123,0.35)", background: BRAND.panel2 }}>
-                <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-                  Tier 2
-                </div>
-                <div className="mt-1 text-2xl font-extrabold text-yellow-300">{result ? money0(tier2Rounded) : "—"}</div>
-                <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-                  50% off (round up)
-                </div>
-              </div>
-            </div>
+  {/* Tier 1 (kept even for apparel items) */}
+  <div
+    className="rounded-2xl border p-3"
+    style={{ borderColor: "rgba(13,110,127,0.40)", background: BRAND.panel2 }}
+  >
+    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+      Tier 1
+    </div>
+    <div className="mt-1 text-2xl font-extrabold text-green-300">
+      {result ? money0(tier1Rounded) : "—"}
+    </div>
+    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+      30% off (rounded)
+    </div>
+  </div>
+
+  {/* Tier 2: if Apparel Price is showing, put Tier 2 full width on the next row */}
+  <div
+    className={(isApparel ? "col-span-2 " : "") + "rounded-2xl border p-3"}
+    style={{ borderColor: "rgba(211,69,123,0.35)", background: BRAND.panel2 }}
+  >
+    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+      Tier 2
+    </div>
+    <div className="mt-1 text-2xl font-extrabold text-yellow-300">
+      {result ? money0(tier2Rounded) : "—"}
+    </div>
+    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+      50% off (round up)
+    </div>
+  </div>
+</div>
+
 
             {/* Error stays tight so it doesn't blow up layout */}
             {error && (
