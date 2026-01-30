@@ -127,12 +127,12 @@ const APPAREL_CATEGORIES = new Set([
 
 function calcApparelPrice(retail: number) {
   // Brackets based on Retail per Unit
-  if (retail <= 19.99) return 6;
-  if (retail <= 24.99) return 8;
-  if (retail <= 29.99) return 10;
-  if (retail <= 34.99) return 12;
-  if (retail <= 40.99) return 15;
-  if (retail <= 49.99) return 20;
+  if (retail <= 15.99) return 6;
+  if (retail <= 22.99) return 8;
+  if (retail <= 27.99) return 10;
+  if (retail <= 30.99) return 12;
+  if (retail <= 36.99) return 15;
+  if (retail <= 44.99) return 20;
   return 25; // 50+
 }
 
