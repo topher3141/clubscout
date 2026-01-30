@@ -37,8 +37,6 @@ function upcToCore11(input: string): string | null {
   return null;
 }
 
-
-
 function parseMoney(val: any): number {
   const cleaned = (val ?? "").toString().replace(/[$,]/g, "").trim();
   const n = Number(cleaned);
@@ -51,19 +49,18 @@ function roundMoney(n: number): number {
 
 function getAuthClient() {
   const clientEmail = requiredEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-let privateKey = requiredEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").trim();
+  let privateKey = requiredEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY").trim();
 
-// If you pasted with surrounding quotes in Vercel, remove them
-if (
-  (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
-  (privateKey.startsWith("'") && privateKey.endsWith("'"))
-) {
-  privateKey = privateKey.slice(1, -1);
-}
+  // If you pasted with surrounding quotes in Vercel, remove them
+  if (
+    (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+    (privateKey.startsWith("'") && privateKey.endsWith("'"))
+  ) {
+    privateKey = privateKey.slice(1, -1);
+  }
 
-// Turn literal \n into real newlines + remove CR characters
-privateKey = privateKey.replace(/\\n/g, "\n").replace(/\r/g, "");
-
+  // Turn literal \n into real newlines + remove CR characters
+  privateKey = privateKey.replace(/\\n/g, "\n").replace(/\r/g, "");
 
   return new google.auth.JWT({
     email: clientEmail,
@@ -88,21 +85,21 @@ async function fetchRows(): Promise<Row[]> {
   const auth = getAuthClient();
   const sheets = google.sheets({ version: "v4", auth });
 
+  // Read through L so we have everything we might need.
   const range = `${tabName}!A1:L`;
-const res = await sheets.spreadsheets.values.get({
-  spreadsheetId,
-  range,
-  valueRenderOption: "UNFORMATTED_VALUE"
-});
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range,
+    valueRenderOption: "UNFORMATTED_VALUE"
+  });
+
   const values = res.data.values || [];
   if (values.length < 2) return [];
 
   const header = values[0].map((h) => (h || "").toString().trim());
   const idx = (name: string) => header.findIndex((h) => h.toLowerCase() === name.toLowerCase());
   const idxAny = (names: string[]) =>
-  names
-    .map((n) => idx(n))
-    .find((i) => typeof i === "number" && i >= 0) ?? -1;
+    names.map((n) => idx(n)).find((i) => typeof i === "number" && i >= 0) ?? -1;
 
   const getAt = (row: any[], i: number) => (i >= 0 ? (row[i] ?? "").toString().trim() : "");
 
@@ -111,18 +108,24 @@ const res = await sheets.spreadsheets.values.get({
   const iItemNumber = idx("ItemNumber");
   const iUpc = idx("UPC Number");
   const iCatDesc = idx("Category description");
-let iRetailPerUnit = idxAny([
-  "Retail per Unit",
-  "Retail per unit",
-  "Retail per Unit (USD$)",
-  "Retail per unit (USD$)",
-  "Retail per Unit (USD)",
-  "Retail per unit (USD)"
-]);
 
-// Fallback to column L (A=0 ... L=11) if header matching fails
-if (iRetailPerUnit < 0) iRetailPerUnit = 11;
+  // UPDATED: Retail now lives in column I (A=0 ... I=8).
+  // We'll still try header matching first, but the hard fallback is column I.
+  let iRetailPerUnit = idxAny([
+    "Retail per Unit",
+    "Retail per unit",
+    "Retail per Unit (USD$)",
+    "Retail per unit (USD$)",
+    "Retail per Unit (USD)",
+    "Retail per unit (USD)",
+    "Retail per item",
+    "Retail Per Item",
+    "Retail per item (USD$)",
+    "Retail per item (USD)"
+  ]);
 
+  // Fallback to column I (A=0 ... I=8) if header matching fails
+  if (iRetailPerUnit < 0) iRetailPerUnit = 8;
 
   const rows: Row[] = [];
   for (let r = 1; r < values.length; r++) {
@@ -166,7 +169,6 @@ export async function GET(req: Request) {
     const refresh = searchParams.get("refresh") === "1";
     const debug = searchParams.get("debug") === "1";
 
-
     if (!q) return NextResponse.json({ ok: false, error: "Missing query" }, { status: 400 });
 
     const rows = refresh ? await fetchRows() : await getCachedRows();
@@ -186,41 +188,39 @@ export async function GET(req: Request) {
           category: match.categoryDescription,
           retail: roundMoney(retail),
           tier1: Math.round(retail * 0.7), // nearest dollar
-          tier2: Math.ceil(retail * 0.5),  // always round up
-
+          tier2: Math.ceil(retail * 0.5), // always round up
           upcNumber: match.upcNumber
         }
       });
     }
 
-const core = upcToCore11(q);
-if (!core) {
-  return NextResponse.json(
-    { ok: false, error: "UPC must be 12 digits (UPC-A) or 11 digits (core without check digit)." },
-    { status: 400 }
-  );
-}
+    const core = upcToCore11(q);
+    if (!core) {
+      return NextResponse.json(
+        { ok: false, error: "UPC must be 12 digits (UPC-A) or 11 digits (core without check digit)." },
+        { status: 400 }
+      );
+    }
 
-const match = rows.find((r) => r.upcNumber === core);
-if (!match) {
-  return NextResponse.json({
-    ok: true,
-    found: false,
-    searched: core,
-    ...(debug
-      ? {
-          debug: {
-            spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-            tabName: process.env.GOOGLE_SHEETS_TAB_NAME || "data",
-            rowsLoaded: rows.length,
-            sampleUpcFromFirstRow: rows[0]?.upcNumber || null,
-            sampleRetailPerUnitFromFirstRow: rows[0]?.retailPerUnit || null
-          }
-        }
-      : {})
-  });
-}
-
+    const match = rows.find((r) => r.upcNumber === core);
+    if (!match) {
+      return NextResponse.json({
+        ok: true,
+        found: false,
+        searched: core,
+        ...(debug
+          ? {
+              debug: {
+                spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+                tabName: process.env.GOOGLE_SHEETS_TAB_NAME || "data",
+                rowsLoaded: rows.length,
+                sampleUpcFromFirstRow: rows[0]?.upcNumber || null,
+                sampleRetailPerUnitFromFirstRow: rows[0]?.retailPerUnit || null
+              }
+            }
+          : {})
+      });
+    }
 
     const retail = parseMoney(match.retailPerUnit);
 
@@ -232,7 +232,7 @@ if (!match) {
         description: match.description,
         itemNumber: match.itemNumber,
         category: match.categoryDescription,
-          retailRaw: match.retailPerUnit,
+        retailRaw: match.retailPerUnit,
         retail: roundMoney(retail),
         tier1: roundMoney(retail * 0.7),
         tier2: roundMoney(retail * 0.5),
@@ -240,9 +240,6 @@ if (!match) {
       }
     });
   } catch (e: any) {
-    return NextResponse.json(
-      { ok: false, error: e?.message || "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: e?.message || "Server error" }, { status: 500 });
   }
 }
