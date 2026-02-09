@@ -338,6 +338,28 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
       Retail per Unit
     </div>
   </div>
+{isApparel && (
+  <div
+    className="mt-2 rounded-xl border p-3"
+    style={{
+      borderColor: "rgba(253,224,71,0.55)",
+      background: "rgba(253,224,71,0.12)",
+      color: "rgba(255,255,255,0.92)"
+    }}
+  >
+    <div className="flex items-start gap-2">
+      <div className="text-lg leading-none">⚠️</div>
+      <div>
+        <div className="text-sm font-extrabold" style={{ color: "rgba(255,255,255,0.95)" }}>
+          Shoes should be priced at Tier 1.
+        </div>
+        <div className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
+          Apparel Price is for apparel categories only — footwear often lands here incorrectly.
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
   {/* Apparel Price ONLY when category matches */}
   {isApparel && (
