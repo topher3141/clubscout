@@ -340,26 +340,22 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
   </div>
 {isApparel && (
   <div
-    className="mt-2 rounded-xl border p-3"
+    className="mt-2 col-span-2 rounded-lg border px-3 py-2"
     style={{
       borderColor: "rgba(253,224,71,0.55)",
-      background: "rgba(253,224,71,0.12)",
-      color: "rgba(255,255,255,0.92)"
+      background: "rgba(253,224,71,0.10)",
+      color: "rgba(255,255,255,0.95)"
     }}
   >
-    <div className="flex items-start gap-2">
-      <div className="text-lg leading-none">⚠️</div>
-      <div>
-        <div className="text-sm font-extrabold" style={{ color: "rgba(255,255,255,0.95)" }}>
-          Shoes should be priced at Tier 1.
-        </div>
-        <div className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
-          Apparel Price is for apparel categories only — footwear often lands here incorrectly.
-        </div>
-      </div>
+    <div className="flex items-center gap-2">
+      <span className="text-base leading-none">⚠️</span>
+      <span className="text-sm font-extrabold">
+        Shoes should be priced at Tier 1.
+      </span>
     </div>
   </div>
 )}
+
 
   {/* Apparel Price ONLY when category matches */}
   {isApparel && (
