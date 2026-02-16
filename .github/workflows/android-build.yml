@@ -26,7 +26,7 @@ jobs:
           java-version: 17
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # Create android project every build (no need to commit /android)
       - name: Create Android platform (if missing)
