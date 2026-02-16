@@ -3,7 +3,7 @@ name: Build Android APK (Capacitor)
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-android:
@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          # Do NOT enable npm cache without a lockfile
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -27,17 +28,23 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Create android project every build (no need to commit /android)
-      - name: Create Android platform (if missing)
+      - name: Add Android platform (if missing)
+        run: npx cap add android || true
+
+      - name: Ensure Android assets directories exist (fix ENOENT)
         run: |
-          npx cap add android || true
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/assets/public
 
       - name: Sync Capacitor
         run: npx cap sync android
 
       - name: Build Debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
+          ./gradlew --version
+          ./gradlew assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
