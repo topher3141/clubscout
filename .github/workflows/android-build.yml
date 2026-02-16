@@ -27,6 +27,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # If android/ is NOT committed, keep this line. If android/ IS committed, it won't hurt.
+      - name: Add Android platform (if missing)
+        run: npx cap add android || true
+
+      # Prevent ENOENT errors when writing capacitor.config.json/plugins.json
+      - name: Ensure Android assets directories exist
+        run: |
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/assets/public
+
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -46,4 +56,5 @@ jobs:
         with:
           name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
 
