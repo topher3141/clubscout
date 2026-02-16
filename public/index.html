@@ -6,6 +6,28 @@
     <title>ClubScout</title>
   </head>
   <body>
-    <script type="module" src="/cap-main.js"></script>
+    <div style="font-family:system-ui;padding:16px">Opening ClubScout…</div>
+
+    <!-- This file is provided by Capacitor and copied during `npx cap sync` -->
+    <script src="capacitor.js"></script>
+
+    <script>
+      (async () => {
+        try {
+          const Browser = window.Capacitor?.Plugins?.Browser;
+          if (!Browser) {
+            document.body.innerHTML = "Browser plugin not available.";
+            return;
+          }
+
+          await Browser.open({
+            url: "https://clubscout-lilac.vercel.app/",
+            presentationStyle: "fullscreen"
+          });
+        } catch (e) {
+          document.body.innerHTML = "Failed to open: " + (e?.message || e);
+        }
+      })();
+    </script>
   </body>
 </html>
