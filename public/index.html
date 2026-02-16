@@ -4,68 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ClubScout</title>
-    <style>
-      body { font-family: system-ui, Arial; padding: 16px; }
-      .muted { opacity: 0.7; font-size: 14px; margin-top: 8px; }
-      .err { color: #b00020; white-space: pre-wrap; margin-top: 12px; }
-    </style>
   </head>
-  <body>
-    <div id="status">Opening ClubScout…</div>
-    <div class="muted" id="detail">Trying Chrome (Custom Tab). If unavailable, we’ll open inside the app.</div>
-    <div class="err" id="err"></div>
-
-    <!-- Provided by Capacitor after `npx cap sync android` -->
-    <script src="capacitor.js"></script>
-
-    <script>
-      const URL = "https://clubscout-lilac.vercel.app/";
-
-      function setStatus(msg) {
-        document.getElementById("status").textContent = msg;
-      }
-      function setErr(msg) {
-        document.getElementById("err").textContent = msg || "";
-      }
-
-      // Fallback: load in the app WebView so you never get stuck
-      const fallbackTimer = setTimeout(() => {
-        setStatus("Opening inside the app…");
-        window.location.replace(URL);
-      }, 1200);
-
-      (async () => {
-        try {
-          const cap = window.Capacitor;
-          const Browser = cap?.Plugins?.Browser;
-
-          if (!cap) {
-            // capacitor.js didn't load -> fallback
-            setStatus("Capacitor not detected. Opening inside the app…");
-            clearTimeout(fallbackTimer);
-            window.location.replace(URL);
-            return;
-          }
-
-          if (!Browser?.open) {
-            setStatus("Chrome launcher not available. Opening inside the app…");
-            clearTimeout(fallbackTimer);
-            window.location.replace(URL);
-            return;
-          }
-
-          setStatus("Launching Chrome…");
-          await Browser.open({ url: URL, presentationStyle: "fullscreen" });
-
-          // If Browser.open works, it will switch away; if it returns immediately, cancel fallback
-          clearTimeout(fallbackTimer);
-        } catch (e) {
-          clearTimeout(fallbackTimer);
-          setErr("Browser.open failed:\n" + (e?.message || String(e)));
-          setStatus("Opening inside the app…");
-          window.location.replace(URL);
-        }
-      })();
-    </script>
-  </body>
+  <body>Loading ClubScout…</body>
 </html>
