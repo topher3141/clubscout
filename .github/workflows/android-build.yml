@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # Do NOT enable npm cache without a lockfile
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -25,17 +24,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # Use npm install since you may not have a lockfile
       - name: Install dependencies
         run: npm install
 
-      - name: Add Android platform (if missing)
-        run: npx cap add android || true
-
-      - name: Ensure Android assets directories exist (fix ENOENT)
-        run: |
-          mkdir -p android/app/src/main/assets
-          mkdir -p android/app/src/main/assets/public
-
+      # android/ is committed, so just sync + build
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -51,3 +44,4 @@ jobs:
         with:
           name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
