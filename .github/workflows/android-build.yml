@@ -24,13 +24,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Use npm install since you may not have a lockfile
       - name: Install dependencies
         run: npm install
 
-      # android/ is committed, so just sync + build
       - name: Sync Capacitor
         run: npx cap sync android
+
+      - name: Fix gradlew permissions
+        working-directory: android
+        run: chmod +x ./gradlew
 
       - name: Build Debug APK
         working-directory: android
