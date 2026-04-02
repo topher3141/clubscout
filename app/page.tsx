@@ -100,15 +100,21 @@ function InfoBox({
 }
 
 export default function Page() {
-  // Ultra-only UI: no ultra toggle, always-on condensed layout.
   const [mode, setMode] = React.useState<Mode>("upc");
   const [query, setQuery] = React.useState("");
   const [scanMode, setScanMode] = React.useState(true);
+
+  const [tier3Enabled, setTier3Enabled] = React.useState(false);
+  const [tier3PromptOpen, setTier3PromptOpen] = React.useState(false);
+  const [tier3Code, setTier3Code] = React.useState("");
+  const [tier3Error, setTier3Error] = React.useState("");
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const focusInput = React.useCallback(() => {
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }, []);
+
+  const tier3InputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [loading, setLoading] = React.useState(false);
   const [found, setFound] = React.useState<boolean | null>(null);
@@ -116,37 +122,32 @@ export default function Page() {
   const [error, setError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<LookupResult | null>(null);
 
-// Apparel category exact matches (must match sheet Category description exactly)
-const APPAREL_CATEGORIES = new Set([
-  "MENS APPAREL",
-  "BASIC APPAREL",
-  "ACCESSORIES",
-  "LADIES APPAREL",
-  "CHILDRENS APPAREL"
-]);
+  const APPAREL_CATEGORIES = new Set([
+    "MENS APPAREL",
+    "BASIC APPAREL",
+    "ACCESSORIES",
+    "LADIES APPAREL",
+    "CHILDRENS APPAREL"
+  ]);
 
-function calcApparelPrice(retail: number) {
-  // Brackets based on Retail per Unit
-  if (retail <= 15.99) return 6;
-  if (retail <= 22.99) return 8;
-  if (retail <= 27.99) return 10;
-  if (retail <= 30.99) return 12;
-  if (retail <= 39.99) return 15;
-  if (retail <= 44.99) return 20;
-  return 25; // 50+
-}
+  function calcApparelPrice(retail: number) {
+    if (retail <= 15.99) return 6;
+    if (retail <= 22.99) return 8;
+    if (retail <= 27.99) return 10;
+    if (retail <= 30.99) return 12;
+    if (retail <= 39.99) return 15;
+    if (retail <= 44.99) return 20;
+    return 25;
+  }
 
-// Pricing math (UI is source of truth for rounding rules)
-const retail = result?.retail ?? 0;
+  const retail = result?.retail ?? 0;
 
-// tier rules
-const tier1Rounded = Math.round(retail * 0.7); // nearest dollar
-const tier2Rounded = Math.ceil(retail * 0.5); // always round up
+  const tier1Rounded = Math.round(retail * 0.7);
+  const tier2Rounded = Math.ceil(retail * 0.5);
+  const tier3Rounded = Math.round(retail * 0.3); // 70% off retail
 
-// apparel rules
-const isApparel = !!result?.category && APPAREL_CATEGORIES.has(result.category.trim());
-const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
-
+  const isApparel = !!result?.category && APPAREL_CATEGORIES.has(result.category.trim());
+  const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
 
   const doSearch = React.useCallback(async () => {
     const q = query.trim();
@@ -184,7 +185,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
       setError(e?.message || "Unexpected error");
       setLoading(false);
     } finally {
-      // Clear and refocus for next scan/value
       setQuery("");
       focusInput();
     }
@@ -205,6 +205,36 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
     if (e.key === "Enter") doSearch();
   };
 
+  const openTier3Prompt = () => {
+    if (tier3Enabled) {
+      setTier3Enabled(false);
+      setTier3PromptOpen(false);
+      setTier3Code("");
+      setTier3Error("");
+      focusInput();
+      return;
+    }
+
+    setTier3PromptOpen(true);
+    setTier3Code("");
+    setTier3Error("");
+    window.setTimeout(() => tier3InputRef.current?.focus(), 0);
+  };
+
+  const submitTier3Code = () => {
+    if (tier3Code === "1997") {
+      setTier3Enabled(true);
+      setTier3PromptOpen(false);
+      setTier3Code("");
+      setTier3Error("");
+      focusInput();
+      return;
+    }
+
+    setTier3Error("Incorrect passcode");
+    window.setTimeout(() => tier3InputRef.current?.focus(), 0);
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -214,7 +244,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
                      ${BRAND.bg}`
       }}
     >
-      {/* Header */}
       <header className="border-b backdrop-blur" style={{ borderColor: BRAND.border, background: "rgba(5,11,16,0.65)" }}>
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-2">
           <div className="flex items-center gap-3">
@@ -252,7 +281,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
 
       <main className="mx-auto max-w-4xl px-3 py-3">
         <div className="rounded-2xl border shadow-soft" style={{ borderColor: BRAND.border, background: BRAND.panel }}>
-          {/* Top controls row */}
           <div className="p-3 pb-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -292,6 +320,18 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
                   >
                     ItemNumber
                   </button>
+
+                  <button
+                    onClick={openTier3Prompt}
+                    className="rounded-xl px-3 py-2 text-sm font-semibold transition"
+                    style={{
+                      background: tier3Enabled ? BRAND.magenta : "rgba(5,11,16,0.55)",
+                      color: "white",
+                      border: `1px solid ${tier3Enabled ? "rgba(211,69,123,0.55)" : BRAND.border}`
+                    }}
+                  >
+                    Tier 3
+                  </button>
                 </div>
 
                 {mode === "upc" && (
@@ -314,7 +354,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
           </div>
 
           <div className="p-3 pt-2">
-            {/* Item name (one line, slightly larger) */}
             <div className="mb-2">
               <div className="text-[15px] font-extrabold tracking-tight line-clamp-1" style={{ color: BRAND.text }}>
                 {result?.description ? result.description : "Ready to scan."}
@@ -324,95 +363,149 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
               </div>
             </div>
 
-            {/* Pricing tiles (always visible) */}
- <div className="grid gap-2 grid-cols-2">
-  {/* Retail always on top */}
-  <div className="col-span-2 rounded-2xl border p-3" style={{ borderColor: BRAND.border, background: BRAND.panel2 }}>
-    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-      Retail
-    </div>
-    <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
-      {result ? money2(retail) : "—"}
-    </div>
-    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-      Retail per Unit
-    </div>
-  </div>
-{isApparel && (
-  <div
-    className="mt-2 col-span-2 rounded-lg border px-3 py-2"
-    style={{
-      borderColor: "rgba(253,224,71,0.55)",
-      background: "rgba(253,224,71,0.10)",
-      color: "rgba(255,255,255,0.95)"
-    }}
-  >
-    <div className="flex items-center gap-2">
-      <span className="text-base leading-none">⚠️</span>
-      <span className="text-sm font-extrabold">
-        Shoes should be priced at Tier 1.
-      </span>
-    </div>
-  </div>
-)}
+            {tier3PromptOpen && (
+              <div
+                className="mb-3 rounded-2xl border p-3"
+                style={{ borderColor: BRAND.border, background: BRAND.panel2 }}
+              >
+                <div className="text-sm font-extrabold" style={{ color: BRAND.text }}>
+                  Enter Tier 3 Passcode
+                </div>
 
+                <div className="mt-2 flex gap-2">
+                  <input
+                    ref={tier3InputRef}
+                    value={tier3Code}
+                    onChange={(e) => setTier3Code(e.target.value.replace(/\D/g, ""))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") submitTier3Code();
+                    }}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    className="w-full rounded-xl px-4 py-3 text-base focus:outline-none"
+                    style={{
+                      border: `1px solid ${BRAND.border}`,
+                      background: "rgba(3, 8, 12, 0.65)",
+                      color: BRAND.text
+                    }}
+                  />
 
-  {/* Apparel Price ONLY when category matches */}
-  {isApparel && (
-    <div
-      className="rounded-2xl border p-3"
-      style={{
-        borderColor: "rgba(239,230,220,0.28)",
-        background: BRAND.panel2
-      }}
-    >
-      <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-        Apparel Price
-      </div>
-      <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
-        {result ? money0(apparelPrice ?? 0) : "—"}
-      </div>
-      <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-        Category matrix
-      </div>
-    </div>
-  )}
+                  <button
+                    onClick={submitTier3Code}
+                    className="rounded-xl px-4 py-3 text-sm font-semibold"
+                    style={{
+                      background: `linear-gradient(180deg, ${BRAND.magenta}, ${BRAND.magenta2})`,
+                      color: "white",
+                      border: "1px solid rgba(211,69,123,0.55)"
+                    }}
+                  >
+                    Unlock
+                  </button>
+                </div>
 
-  {/* Tier 1 (kept even for apparel items) */}
-  <div
-    className="rounded-2xl border p-3"
-    style={{ borderColor: "rgba(13,110,127,0.40)", background: BRAND.panel2 }}
-  >
-    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-      Tier 1
-    </div>
-    <div className="mt-1 text-2xl font-extrabold text-green-300">
-      {result ? money0(tier1Rounded) : "—"}
-    </div>
-    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-      30% off (rounded)
-    </div>
-  </div>
+                {tier3Error && (
+                  <div className="mt-2 text-xs font-semibold text-red-300">{tier3Error}</div>
+                )}
+              </div>
+            )}
 
-  {/* Tier 2: if Apparel Price is showing, put Tier 2 full width on the next row */}
-  <div
-    className={(isApparel ? "col-span-2 " : "") + "rounded-2xl border p-3"}
-    style={{ borderColor: "rgba(211,69,123,0.35)", background: BRAND.panel2 }}
-  >
-    <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
-      Tier 2
-    </div>
-    <div className="mt-1 text-2xl font-extrabold text-yellow-300">
-      {result ? money0(tier2Rounded) : "—"}
-    </div>
-    <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
-      50% off (round up)
-    </div>
-  </div>
-</div>
+            <div className="grid gap-2 grid-cols-2">
+              <div className="col-span-2 rounded-2xl border p-3" style={{ borderColor: BRAND.border, background: BRAND.panel2 }}>
+                <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                  Retail
+                </div>
+                <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
+                  {result ? money2(retail) : "—"}
+                </div>
+                <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                  Retail per Unit
+                </div>
+              </div>
 
+              {isApparel && (
+                <div
+                  className="col-span-2 rounded-lg border px-3 py-2"
+                  style={{
+                    borderColor: "rgba(253,224,71,0.55)",
+                    background: "rgba(253,224,71,0.10)",
+                    color: "rgba(255,255,255,0.95)"
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base leading-none">⚠️</span>
+                    <span className="text-sm font-extrabold">Shoes should be priced at Tier 1.</span>
+                  </div>
+                </div>
+              )}
 
-            {/* Error stays tight so it doesn't blow up layout */}
+              {isApparel && (
+                <div
+                  className="rounded-2xl border p-3"
+                  style={{
+                    borderColor: "rgba(239,230,220,0.28)",
+                    background: BRAND.panel2
+                  }}
+                >
+                  <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                    Apparel Price
+                  </div>
+                  <div className="mt-1 text-2xl font-extrabold" style={{ color: BRAND.cream }}>
+                    {result ? money0(apparelPrice ?? 0) : "—"}
+                  </div>
+                  <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                    Category matrix
+                  </div>
+                </div>
+              )}
+
+              <div
+                className="rounded-2xl border p-3"
+                style={{ borderColor: "rgba(13,110,127,0.40)", background: BRAND.panel2 }}
+              >
+                <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                  Tier 1
+                </div>
+                <div className="mt-1 text-2xl font-extrabold text-green-300">
+                  {result ? money0(tier1Rounded) : "—"}
+                </div>
+                <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                  30% off (rounded)
+                </div>
+              </div>
+
+              <div
+                className={(isApparel ? "col-span-2 " : "") + "rounded-2xl border p-3"}
+                style={{ borderColor: "rgba(211,69,123,0.35)", background: BRAND.panel2 }}
+              >
+                <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                  Tier 2
+                </div>
+                <div className="mt-1 text-2xl font-extrabold text-yellow-300">
+                  {result ? money0(tier2Rounded) : "—"}
+                </div>
+                <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                  50% off (round up)
+                </div>
+              </div>
+
+              {tier3Enabled && (
+                <div
+                  className="col-span-2 rounded-2xl border p-3"
+                  style={{ borderColor: "rgba(211,69,123,0.35)", background: BRAND.panel2 }}
+                >
+                  <div className="text-xs font-semibold" style={{ color: BRAND.muted }}>
+                    Tier 3
+                  </div>
+                  <div className="mt-1 text-2xl font-extrabold" style={{ color: "#f9a8d4" }}>
+                    {result ? money0(tier3Rounded) : "—"}
+                  </div>
+                  <div className="mt-1 text-xs" style={{ color: BRAND.muted }}>
+                    70% off retail
+                  </div>
+                </div>
+              )}
+            </div>
+
             {error && (
               <div
                 className="mt-2 rounded-xl border p-3 text-sm"
@@ -426,7 +519,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
               </div>
             )}
 
-            {/* Search controls */}
             <div className="mt-3 flex flex-col gap-2">
               <input
                 ref={inputRef}
@@ -473,7 +565,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
               </div>
             </div>
 
-            {/* Details below search (scroll if you want more) */}
             {result && (
               <div className="mt-3">
                 <div className="text-xs font-semibold mb-2" style={{ color: BRAND.muted }}>
@@ -489,7 +580,6 @@ const apparelPrice = isApparel ? calcApparelPrice(retail) : null;
               </div>
             )}
 
-            {/* No-match message (kept small) */}
             {found === false && !error && (
               <div className="mt-3 rounded-2xl border p-3" style={{ borderColor: BRAND.border, background: BRAND.panel2 }}>
                 <div className="text-sm font-semibold" style={{ color: BRAND.text }}>
